@@ -1,3 +1,99 @@
-data/*tmp*.aep
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Backup files
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
+
+# Go build artifacts
+/mobot
+/mobot-*
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test and coverage
+coverage/
+*.test
+*.out
+.coverage
+htmlcov/
+
+# Temporary files
+data/*tmp*.aep
+sandbox/temp/
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.mpg
+*.mpeg
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+vendor/
+node_modules/
+
+# OS specific
+.AppleDouble
+.LSOverride
+Icon
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
