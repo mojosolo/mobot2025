@@ -60,15 +60,42 @@ coverage/
 htmlcov/
 
 # Temporary files
-data/*tmp*.aep
 sandbox/temp/
 
-# Large media files
+# Test data - AEP files should be downloaded separately
+data/
+sample-aep/
+
+# Binary files that should NEVER be in version control
+*.aep
+*.aepx
+*.prproj
+*.psd
+*.ai
+*.pdf
+*.doc
+*.docx
+
+# Media files
 *.mp4
 *.mov
 *.avi
 *.mpg
 *.mpeg
+*.wmv
+*.flv
+*.m4v
+*.webm
+
+# Image files (except small icons/docs if needed)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.svg
 
 # Logs
 *.log
