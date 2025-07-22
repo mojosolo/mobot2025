@@ -39,6 +39,11 @@ type ProjectMetadata struct {
 	
 	// Opportunities
 	Opportunities []Opportunity    `json:"opportunities"`
+	
+	// S3 Storage fields
+	S3Bucket      string    `json:"s3_bucket,omitempty"`
+	S3Key         string    `json:"s3_key,omitempty"`
+	S3VersionID   string    `json:"s3_version_id,omitempty"`
 }
 
 // CompositionInfo represents a composition within the project

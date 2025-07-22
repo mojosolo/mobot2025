@@ -24,7 +24,9 @@
 - **📈 Quality Assurance**: Pattern matching and anti-pattern detection
 - **🏗️ Batch Processing**: Concurrent processing of multiple templates
 - **📡 REST API**: Production-ready API for all features
-- **💾 SQLite Database**: Persistent catalog storage with full-text search
+- **💾 Database Support**: SQLite (local) or PostgreSQL with Neon (production)
+- **☁️ S3 Storage**: Optional AWS S3 integration for AEP file storage
+- **🔐 GitHub Secrets**: Secure credential management for production deployments
 
 ## 📋 Quick Start
 
@@ -207,12 +209,41 @@ results = catalog.batch_process([
 ])
 ```
 
+## ☁️ Cloud Deployment
+
+MoBot 2025 supports production deployment with cloud services:
+
+### Neon PostgreSQL Database
+- Serverless PostgreSQL with auto-scaling
+- Database branching for development/staging
+- Point-in-time recovery
+
+### AWS S3 Storage
+- Secure file storage for AEP projects
+- Presigned URLs for direct downloads
+- Automatic file organization by date
+
+### Configuration
+```bash
+# For production with Neon + S3
+export MOBOT_DB_TYPE=postgres
+export NEON_DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+export AWS_S3_ENABLED=true
+export AWS_ACCESS_KEY_ID=your-key
+export AWS_SECRET_ACCESS_KEY=your-secret
+export AWS_BUCKET=mobot2025-storage
+```
+
+See [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.
+
 ## 🛠️ Development
 
 ### Prerequisites
 - Go 1.19 or higher
 - Python 3.8+ (for Python bridge)
-- SQLite 3
+- SQLite 3 (for local development)
+- PostgreSQL client (for Neon deployment)
+- AWS CLI (for S3 deployment)
 - Git
 
 ## 📁 Project Structure

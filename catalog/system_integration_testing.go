@@ -87,8 +87,8 @@ type NetworkConfig struct {
 	TLS      bool   `json:"tls"`
 }
 
-// StorageConfig defines storage configuration
-type StorageConfig struct {
+// TestStorageConfig defines storage configuration for testing
+type TestStorageConfig struct {
 	Type string `json:"type"`
 	Path string `json:"path"`
 	Size int64  `json:"size"`

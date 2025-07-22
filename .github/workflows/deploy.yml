@@ -1,0 +1,113 @@
+name: Deploy MoBot 2025
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  pull_request:
+    branches:
+      - main
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    # Use GitHub Secrets for all credentials
+    env:
+      # Neon Database
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      MOBOT_DB_TYPE: postgres
+      
+      # AWS S3
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+      AWS_S3_ENABLED: true
+      
+      # Pinecone (for future use)
+      PINECONE_HOST: ${{ secrets.PINECONE_HOST }}
+      PINECONE_INDEX: ${{ secrets.PINECONE_INDEX }}
+      PINECONE_SECRET: ${{ secrets.PINECONE_SECRET }}
+      
+      # Other services
+      ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
+      FIREFLIES_API_KEY: ${{ secrets.FIREFLIES_API_KEY }}
+      FIREFLIES_WEBHOOK_SECRET: ${{ secrets.FIREFLIES_WEBHOOK_SECRET }}
+      VIMEO_CLIENT: ${{ secrets.VIMEO_CLIENT }}
+      VIMEO_SECRET: ${{ secrets.VIMEO_SECRET }}
+      VIMEO_ACCESS: ${{ secrets.VIMEO_ACCESS }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        go mod download
+        go mod verify
+
+    - name: Run tests
+      run: |
+        go test -v -race -coverprofile=coverage.out ./...
+        go tool cover -html=coverage.out -o coverage.html
+
+    - name: Upload coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.html
+
+    - name: Build
+      run: |
+        make build
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    environment:
+      name: staging
+      url: https://staging.mobot2025.com
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      env:
+        NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL_STAGING }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your deployment script here
+
+  deploy-production:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production'
+    
+    environment:
+      name: production
+      url: https://mobot2025.com
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      env:
+        NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL_PRODUCTION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        echo "Deploying to production environment..."
+        # Add your deployment script here

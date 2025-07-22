@@ -2,10 +2,15 @@
 package catalog
 
 import (
+    "context"
     "encoding/json"
     "fmt"
+    "io"
     "net/http"
+    "os"
     "path/filepath"
+    "strconv"
+    "strings"
     "sync"
     "time"
 )
@@ -13,9 +18,11 @@ import (
 // APIService provides HTTP endpoints for the AEP processing pipeline
 type APIService struct {
     parser     *Parser
-    database   *Database
+    database   DatabaseInterface
+    storage    StorageInterface
     cache      *ProjectCache
     jobQueue   *JobQueue
+    config     *Config
     port       int
 }
 
@@ -47,15 +54,28 @@ type JobQueue struct {
 
 // NewAPIService creates a new API service
 func NewAPIService(port int, dbPath string) (*APIService, error) {
+    // Load configuration
+    cfg, err := LoadConfig()
+    if err != nil {
+        return nil, fmt.Errorf("failed to load config: %w", err)
+    }
+
     // Initialize database
-    database, err := NewDatabase(dbPath)
+    database, err := cfg.GetDatabaseInterface()
     if err != nil {
         return nil, fmt.Errorf("failed to initialize database: %w", err)
+    }
+
+    // Initialize storage
+    storage, err := cfg.GetStorageInterface()
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize storage: %w", err)
     }
 
     return &APIService{
         parser: NewParser(),
         database: database,
+        storage: storage,
         cache: &ProjectCache{
             projects: make(map[string]*ProjectMetadata),
             ttl:      15 * time.Minute,
@@ -63,6 +83,7 @@ func NewAPIService(port int, dbPath string) (*APIService, error) {
         jobQueue: &JobQueue{
             jobs: make(map[string]*Job),
         },
+        config: cfg,
         port: port,
     }, nil
 }
@@ -81,6 +102,9 @@ func (s *APIService) Start() error {
     mux.HandleFunc("/api/v1/health", s.handleHealth)
     mux.HandleFunc("/api/v1/search", s.handleSearch)
     mux.HandleFunc("/api/v1/filter", s.handleFilter)
+    mux.HandleFunc("/api/v1/upload", s.handleUpload)
+    mux.HandleFunc("/api/v1/download/", s.handleDownload)
+    mux.HandleFunc("/api/v1/projects/", s.handleProjects)
     
     // Static file server for reports
     mux.Handle("/reports/", http.StripPrefix("/reports/", http.FileServer(http.Dir("./reports"))))
@@ -99,8 +123,10 @@ func (s *APIService) handleParse(w http.ResponseWriter, r *http.Request) {
     }
     
     var req struct {
-        FilePath string `json:"file_path"`
-        Options  struct {
+        FilePath  string `json:"file_path"`
+        S3Key     string `json:"s3_key"`
+        ProjectID int64  `json:"project_id"`
+        Options   struct {
             ExtractText  bool `json:"extract_text"`
             ExtractMedia bool `json:"extract_media"`
             DeepAnalysis bool `json:"deep_analysis"`
@@ -112,8 +138,90 @@ func (s *APIService) handleParse(w http.ResponseWriter, r *http.Request) {
         return
     }
     
+    var filePath string
+    var tempFile *os.File
+    var shouldCleanup bool
+    
+    // Determine file source
+    if req.ProjectID > 0 {
+        // Load from database/S3
+        project, err := s.database.GetProject(req.ProjectID)
+        if err != nil {
+            http.Error(w, "Project not found", http.StatusNotFound)
+            return
+        }
+        
+        if project.S3Key != "" && s.storage != nil {
+            // Download from S3
+            ctx := context.Background()
+            reader, err := s.storage.Download(ctx, project.S3Key)
+            if err != nil {
+                http.Error(w, "Failed to download file", http.StatusInternalServerError)
+                return
+            }
+            defer reader.Close()
+            
+            // Create temp file
+            tempFile, err = os.CreateTemp("", "parse-*.aep")
+            if err != nil {
+                http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
+                return
+            }
+            shouldCleanup = true
+            defer tempFile.Close()
+            
+            // Copy S3 content to temp file
+            _, err = io.Copy(tempFile, reader)
+            if err != nil {
+                http.Error(w, "Failed to save file", http.StatusInternalServerError)
+                return
+            }
+            
+            filePath = tempFile.Name()
+        }
+    } else if req.S3Key != "" && s.storage != nil {
+        // Direct S3 key provided
+        ctx := context.Background()
+        reader, err := s.storage.Download(ctx, req.S3Key)
+        if err != nil {
+            http.Error(w, "Failed to download file", http.StatusInternalServerError)
+            return
+        }
+        defer reader.Close()
+        
+        // Create temp file
+        tempFile, err = os.CreateTemp("", "parse-*.aep")
+        if err != nil {
+            http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
+            return
+        }
+        shouldCleanup = true
+        defer tempFile.Close()
+        
+        // Copy S3 content to temp file
+        _, err = io.Copy(tempFile, reader)
+        if err != nil {
+            http.Error(w, "Failed to save file", http.StatusInternalServerError)
+            return
+        }
+        
+        filePath = tempFile.Name()
+    } else if req.FilePath != "" {
+        // Local file path
+        filePath = req.FilePath
+    } else {
+        http.Error(w, "Must provide file_path, s3_key, or project_id", http.StatusBadRequest)
+        return
+    }
+    
+    // Clean up temp file if created
+    if shouldCleanup {
+        defer os.Remove(filePath)
+    }
+    
     // Check cache first
-    if cached := s.cache.Get(req.FilePath); cached != nil {
+    cacheKey := fmt.Sprintf("%s:%s:%d", req.FilePath, req.S3Key, req.ProjectID)
+    if cached := s.cache.Get(cacheKey); cached != nil {
         s.writeJSON(w, cached)
         return
     }
@@ -125,10 +233,15 @@ func (s *APIService) handleParse(w http.ResponseWriter, r *http.Request) {
     parser.DeepAnalysis = req.Options.DeepAnalysis
     
     // Parse the project
-    metadata, err := parser.ParseProject(req.FilePath)
+    metadata, err := parser.ParseProject(filePath)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
+    }
+    
+    // Update S3 info if available
+    if req.S3Key != "" {
+        metadata.S3Key = req.S3Key
     }
     
     // Store in database
@@ -138,7 +251,7 @@ func (s *APIService) handleParse(w http.ResponseWriter, r *http.Request) {
     }
     
     // Cache the result
-    s.cache.Set(req.FilePath, metadata)
+    s.cache.Set(cacheKey, metadata)
     
     s.writeJSON(w, metadata)
 }
@@ -632,3 +745,243 @@ func parseInt(s string, defaultVal int) int {
 }
 
 var startTime = time.Now()
+
+// handleUpload handles AEP file uploads
+func (s *APIService) handleUpload(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    // Parse multipart form
+    err := r.ParseMultipartForm(100 << 20) // 100MB max
+    if err != nil {
+        http.Error(w, "Failed to parse form", http.StatusBadRequest)
+        return
+    }
+
+    file, header, err := r.FormFile("file")
+    if err != nil {
+        http.Error(w, "Failed to get file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+
+    // Validate file extension
+    if !strings.HasSuffix(strings.ToLower(header.Filename), ".aep") {
+        http.Error(w, "Only .aep files are allowed", http.StatusBadRequest)
+        return
+    }
+
+    // Create temporary file for parsing
+    tempFile, err := os.CreateTemp("", "upload-*.aep")
+    if err != nil {
+        http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
+        return
+    }
+    defer os.Remove(tempFile.Name())
+    defer tempFile.Close()
+
+    // Copy uploaded file to temp file
+    _, err = io.Copy(tempFile, file)
+    if err != nil {
+        http.Error(w, "Failed to save file", http.StatusInternalServerError)
+        return
+    }
+
+    // Parse the AEP file
+    metadata, err := s.parser.ParseProject(tempFile.Name())
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to parse AEP: %v", err), http.StatusBadRequest)
+        return
+    }
+
+    // Upload to S3 if enabled
+    if s.config.Features.EnableS3Storage && s.storage != nil {
+        ctx := context.Background()
+        
+        // Generate S3 key
+        s3Key := fmt.Sprintf("projects/%s/%s", 
+            time.Now().Format("2006/01/02"), 
+            header.Filename)
+
+        // Reopen file for S3 upload
+        tempFile.Seek(0, 0)
+        
+        // Upload with metadata
+        storageInfo, err := s.storage.Upload(ctx, s3Key, tempFile, map[string]string{
+            "original-name": header.Filename,
+            "parsed-at":    metadata.ParsedAt.Format(time.RFC3339),
+            "project-name": metadata.FileName,
+        })
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Failed to upload to S3: %v", err), http.StatusInternalServerError)
+            return
+        }
+
+        // Update metadata with S3 info
+        metadata.S3Bucket = storageInfo.Bucket
+        metadata.S3Key = storageInfo.Key
+        metadata.S3VersionID = storageInfo.VersionID
+    }
+
+    // Store in database
+    if err := s.database.StoreProject(metadata); err != nil {
+        http.Error(w, fmt.Sprintf("Failed to store in database: %v", err), http.StatusInternalServerError)
+        return
+    }
+
+    // Get project ID from database (assuming StoreProject sets it)
+    projectID := int64(0) // This would be set by StoreProject in a real implementation
+
+    s.writeJSON(w, map[string]interface{}{
+        "success": true,
+        "project_id": projectID,
+        "metadata": metadata,
+        "s3_location": map[string]string{
+            "bucket": metadata.S3Bucket,
+            "key": metadata.S3Key,
+        },
+    })
+}
+
+// handleDownload handles AEP file downloads
+func (s *APIService) handleDownload(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    // Extract project ID from URL
+    parts := strings.Split(r.URL.Path, "/")
+    if len(parts) < 5 {
+        http.Error(w, "Invalid URL", http.StatusBadRequest)
+        return
+    }
+
+    projectIDStr := parts[4]
+    projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+    if err != nil {
+        http.Error(w, "Invalid project ID", http.StatusBadRequest)
+        return
+    }
+
+    // Get project from database
+    project, err := s.database.GetProject(projectID)
+    if err != nil {
+        http.Error(w, "Project not found", http.StatusNotFound)
+        return
+    }
+
+    // Check if file is in S3
+    if project.S3Key != "" && s.storage != nil {
+        ctx := context.Background()
+        
+        // Get presigned URL for direct download
+        if r.URL.Query().Get("presigned") == "true" {
+            url, err := s.storage.GetURL(ctx, project.S3Key, 15*time.Minute)
+            if err != nil {
+                http.Error(w, "Failed to generate download URL", http.StatusInternalServerError)
+                return
+            }
+            
+            s.writeJSON(w, map[string]interface{}{
+                "download_url": url,
+                "expires_in": "15m",
+            })
+            return
+        }
+
+        // Stream file directly
+        reader, err := s.storage.Download(ctx, project.S3Key)
+        if err != nil {
+            http.Error(w, "Failed to download file", http.StatusInternalServerError)
+            return
+        }
+        defer reader.Close()
+
+        // Set headers
+        w.Header().Set("Content-Type", "application/octet-stream")
+        w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", project.FileName))
+        
+        // Stream to client
+        _, err = io.Copy(w, reader)
+        if err != nil {
+            // Log error but can't send HTTP error after headers are written
+            fmt.Printf("Error streaming file: %v\n", err)
+        }
+    } else {
+        // File not available in storage
+        http.Error(w, "File not available for download", http.StatusNotFound)
+    }
+}
+
+// handleProjects handles project listing and details
+func (s *APIService) handleProjects(w http.ResponseWriter, r *http.Request) {
+    // Extract project ID if present
+    parts := strings.Split(r.URL.Path, "/")
+    if len(parts) > 4 && parts[4] != "" {
+        // Get specific project
+        projectIDStr := parts[4]
+        projectID, err := strconv.ParseInt(projectIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "Invalid project ID", http.StatusBadRequest)
+            return
+        }
+
+        project, err := s.database.GetProject(projectID)
+        if err != nil {
+            http.Error(w, "Project not found", http.StatusNotFound)
+            return
+        }
+
+        // Add download URL if in S3
+        response := map[string]interface{}{
+            "project": project,
+        }
+        
+        if project.S3Key != "" && s.storage != nil {
+            response["download_url"] = fmt.Sprintf("/api/v1/download/%d", projectID)
+            response["presigned_url"] = fmt.Sprintf("/api/v1/download/%d?presigned=true", projectID)
+        }
+
+        s.writeJSON(w, response)
+        return
+    }
+
+    // List all projects
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    // Get query parameters
+    query := r.URL.Query().Get("q")
+    limitStr := r.URL.Query().Get("limit")
+    limit := 50
+    if limitStr != "" {
+        if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+            limit = parsed
+        }
+    }
+
+    var results []*ProjectMetadata
+    var err error
+
+    if query != "" {
+        results, err = s.database.SearchProjects(query, limit)
+    } else {
+        // For now, use search with empty query to list all
+        results, err = s.database.SearchProjects("", limit)
+    }
+
+    if err != nil {
+        http.Error(w, "Failed to list projects", http.StatusInternalServerError)
+        return
+    }
+
+    s.writeJSON(w, map[string]interface{}{
+        "total": len(results),
+        "projects": results,
+    })
+}
