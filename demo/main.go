@@ -5,12 +5,12 @@ import (
 	"log"
 	"path/filepath"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 func main() {
 	fmt.Println("🎬 Adobe After Effects AEP Parser Demo")
-	fmt.Println("=====================================\n")
+	fmt.Println("=====================================")
 	
 	// Parse a test AEP file with more content
 	testFile := "data/Layer-01.aep"  // This file has 17 layers!

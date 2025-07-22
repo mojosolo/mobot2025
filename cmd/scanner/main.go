@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"path/filepath"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 func main() {
 	fmt.Println("🔍 Scanning all AEP files in data directory...")
-	fmt.Println("============================================\n")
+	fmt.Println("============================================")
 	
 	testFiles := []string{
 		"data/BPC-8.aep",

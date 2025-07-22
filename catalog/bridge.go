@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 // ProjectMetadata represents the enhanced metadata for an AE project

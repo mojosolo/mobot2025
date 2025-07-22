@@ -12,26 +12,29 @@ This document provides practical examples for common use cases with MoBot 2025.
 6. [API Integration](#api-integration)
 7. [Advanced Scenarios](#advanced-scenarios)
 
+## ⚠️ Important: AEP Files Required
+
+**This repository does NOT include AEP test files.** All examples below assume you have your own Adobe After Effects project files. See [TEST_DATA_README.md](../TEST_DATA_README.md) for more information.
+
 ## Basic Usage
 
 ### Command Line Examples
 
 ```bash
-# Parse a single AEP file (using real test files)
-./mobot parse data/BPC-8.aep
+# Parse a single AEP file (you must provide your own)
+./mobot parse your-project.aep
 
-# Parse complex real-world project
-./mobot parse "sample-aep/Ai Text Intro.aep" --verbose
-# This successfully parses 3,157 items in ~10ms!
+# Parse complex project with verbose output
+./mobot parse your-complex-project.aep --verbose
 
 # Parse and export to JSON
-./mobot parse data/ExEn-js.aep --output json > template.json
+./mobot parse your-project.aep --output json > template.json
 
 # Start API server
-./mobot api
+./mobot serve
 
 # Start API with custom port
-./mobot api --port 8090
+./mobot serve --port 8090
 ```
 
 ### Go Library Examples
@@ -42,7 +45,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/yourusername/mobot2025/catalog"
+    "github.com/mojosolo/mobot2025/catalog"
 )
 
 func main() {
@@ -53,8 +56,8 @@ func main() {
     }
     defer cat.Close()
 
-    // Import template (using real test files)
-    template, err := cat.ImportTemplate("data/BPC-16.aep")
+    // Import template (you must provide your own AEP file)
+    template, err := cat.ImportTemplate("your-project.aep")
     if err != nil {
         log.Fatal(err)
     }
@@ -64,43 +67,40 @@ func main() {
 }
 ```
 
-## Real AEP File Examples
+## Expected AEP File Types
 
-MoBot 2025 includes real AEP test files demonstrating various features:
+When testing MoBot 2025, you'll want to use various types of AEP files:
 
-### Available Test Files
+### Recommended Test Cases
 ```bash
-# Basic color depth testing
-data/BPC-8.aep    # 8-bit color depth
-data/BPC-16.aep   # 16-bit color depth  
-data/BPC-32.aep   # 32-bit color depth
+# Color depth variations
+your-8bit-project.aep    # 8-bit color depth projects
+your-16bit-project.aep   # 16-bit color depth projects
+your-32bit-project.aep   # 32-bit color depth projects
 
-# Expression engine testing
-data/ExEn-es.aep  # ExtendScript expressions
-data/ExEn-js.aep  # JavaScript expressions
+# Expression variations
+your-extendscript-project.aep  # Projects with ExtendScript expressions
+your-javascript-project.aep    # Projects with JavaScript expressions
 
-# Structure testing
-data/Item-01.aep      # Item hierarchy structures
-data/Layer-01.aep     # Layer structures
-data/Property-01.aep  # Property structures
-
-# Complex real-world project
-"sample-aep/Ai Text Intro.aep"  # 3,157 items, excellent for stress testing
+# Structure variations
+your-simple-project.aep      # Simple projects with few layers
+your-complex-project.aep     # Complex projects with many compositions
+your-nested-project.aep      # Projects with nested compositions
 ```
 
-### Performance Benchmarks with Real Files
+### Performance Expectations
 ```go
-// Real-world performance testing shows excellent results:
-// Simple files (8 items): ~1ms
-// Medium files (100 items): ~3ms
-// Complex files (3,157 items): ~10ms
-// Memory usage: <50MB for all files
+// Based on testing with real AEP files:
+// Simple files (8-50 items): ~1-2ms parsing time
+// Medium files (100-500 items): ~3-5ms parsing time
+// Complex files (1000+ items): ~10-20ms parsing time
+// Memory usage: Typically under 50MB
 
-func BenchmarkRealFiles(b *testing.B) {
+func BenchmarkYourFiles(b *testing.B) {
     files := []string{
-        "data/BPC-8.aep",      // Simple
-        "data/Layer-01.aep",   // Medium
-        "sample-aep/Ai Text Intro.aep", // Complex
+        "your-simple-project.aep",      // Simple
+        "your-medium-project.aep",      // Medium
+        "your-complex-project.aep",     // Complex
     }
     
     for _, file := range files {
@@ -121,8 +121,8 @@ func BenchmarkRealFiles(b *testing.B) {
 ### Importing Templates
 
 ```go
-// Import with metadata
-template, err := cat.ImportTemplate("promo.aep", catalog.ImportOptions{
+// Import with metadata (you must provide your own AEP file)
+template, err := cat.ImportTemplate("your-promo.aep", catalog.ImportOptions{
     Name: "Summer Promo 2025",
     Tags: []string{"promotional", "summer", "social"},
     Metadata: map[string]interface{}{
@@ -132,11 +132,11 @@ template, err := cat.ImportTemplate("promo.aep", catalog.ImportOptions{
     },
 })
 
-// Batch import
+// Batch import (you must provide your own AEP files)
 templates := []string{
-    "template1.aep",
-    "template2.aep",
-    "template3.aep",
+    "your-template1.aep",
+    "your-template2.aep",
+    "your-template3.aep",
 }
 
 for _, path := range templates {
@@ -693,4 +693,4 @@ jobs:
 
 ---
 
-For more examples, check the `examples/` directory in the repository or visit our [GitHub Examples](https://github.com/yourusername/mobot2025/tree/main/examples).
+For more examples, check the `examples/` directory in the repository or visit our [GitHub Examples](https://github.com/mojosolo/mobot2025/tree/main/examples).

@@ -1,0 +1,94 @@
+run:
+  timeout: 5m
+  skip-dirs:
+    - vendor
+    - sandbox
+    - demo
+    - enhancements
+  skip-files:
+    - ".*_test.go"
+
+linters:
+  enable:
+    - gofmt
+    - golint
+    - govet
+    - errcheck
+    - ineffassign
+    - gosimple
+    - staticcheck
+    - unused
+    - misspell
+    - gocyclo
+    - gocognit
+    - goconst
+    - godox
+    - gosec
+    - prealloc
+    - unconvert
+    - dupl
+    - gocritic
+    - goimports
+    - revive
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  gocognit:
+    min-complexity: 20
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  dupl:
+    threshold: 100
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+        - goconst
+    - path: test/
+      linters:
+        - gosec
+        - dupl
+    - linters:
+        - golint
+      text: "should have comment or be unexported"
+  max-same-issues: 0
+  new: false
+  fix: true

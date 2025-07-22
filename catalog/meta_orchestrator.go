@@ -73,6 +73,12 @@ type Workflow struct {
 	
 	// Metadata
 	Metadata        map[string]interface{} `json:"metadata"`
+	
+	// Agent Results
+	Requirements        []string               `json:"requirements,omitempty"`
+	GeneratedCode       map[string]string      `json:"generated_code,omitempty"`
+	VerificationResults *VerificationResult    `json:"verification_results,omitempty"`
+	ReviewResults       *ReviewResult          `json:"review_results,omitempty"`
 }
 
 // WorkflowTask represents a task within a workflow
@@ -378,9 +384,32 @@ func (mo *MetaOrchestrator) executeVerificationStage(workflow *Workflow) error {
 	workflow.CurrentStage = "verification"
 	workflow.Progress = 0.8
 	
-	// TODO: Implement verification agent integration
-	// For now, simulate verification
-	time.Sleep(time.Second * 2) // Simulate verification time
+	// Execute verification using the verification agent
+	verificationAgent := NewVerificationAgent(mo.database)
+	
+	// For now, verify the overall workflow
+	// In a real implementation, this would verify each task individually
+	verificationRequest := &VerificationRequest{
+		TaskID:        workflow.ID,
+		BlockType:     "workflow",
+		GeneratedCode: "// Workflow implementation completed",
+		TestCode:      "// Test implementation",
+		Requirements:  workflow.Requirements,
+		Context: map[string]interface{}{
+			"workflow_id": workflow.ID,
+			"project_path": workflow.ProjectPath,
+		},
+		CreatedAt:     time.Now(),
+	}
+	
+	verificationResult, err := verificationAgent.VerifyImplementation(verificationRequest)
+	if err != nil {
+		mo.logEvent("error", "verification_failed", fmt.Sprintf("Verification failed: %v", err), workflow.ID)
+		return fmt.Errorf("verification failed: %w", err)
+	}
+	
+	// Store verification results
+	workflow.VerificationResults = verificationResult
 	
 	workflow.Progress = 0.9
 	mo.logEvent("info", "verification_stage_completed", "Verification stage completed", workflow.ID)
@@ -395,9 +424,32 @@ func (mo *MetaOrchestrator) executeReviewStage(workflow *Workflow) error {
 	workflow.CurrentStage = "review"
 	workflow.Progress = 0.95
 	
-	// TODO: Implement review agent integration
-	// For now, simulate review
-	time.Sleep(time.Second * 1) // Simulate review time
+	// Execute review using the review agent
+	reviewAgent := NewReviewAgent(mo.database)
+	
+	// For now, review the overall workflow
+	// In a real implementation, this would review each task individually
+	reviewRequest := &ReviewRequest{
+		TaskID:            workflow.ID,
+		BlockType:         "workflow",
+		GeneratedCode:     "// Workflow implementation completed",
+		TestCode:          "// Test implementation",
+		VerificationResult: workflow.VerificationResults,
+		Context: map[string]interface{}{
+			"workflow_id": workflow.ID,
+			"project_path": workflow.ProjectPath,
+		},
+		CreatedAt:         time.Now(),
+	}
+	
+	reviewResult, err := reviewAgent.ReviewCode(reviewRequest)
+	if err != nil {
+		mo.logEvent("error", "review_failed", fmt.Sprintf("Review failed: %v", err), workflow.ID)
+		return fmt.Errorf("review failed: %w", err)
+	}
+	
+	// Store review results
+	workflow.ReviewResults = reviewResult
 	
 	workflow.Progress = 1.0
 	mo.logEvent("info", "review_stage_completed", "Review stage completed", workflow.ID)

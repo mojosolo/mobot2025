@@ -1,6 +1,9 @@
-package aep
+package enhancements
 
-import "github.com/rioam2/rifx"
+import (
+	"github.com/rioam2/rifx"
+	aep "github.com/mojosolo/mobot2025"
+)
 
 // Enhancement: Parse comment data blocks (cmta)
 // Following existing patterns from parseItem function
@@ -30,14 +33,14 @@ func parseCommentData(block *rifx.Block) (*CommentData, error) {
 
 // Enhancement to parseItem function - add this case to the switch statement
 // This would be inserted at line 77 in item.go within the existing switch
-func enhanceItemParserWithComments(itemHead *rifx.List, item *Item) error {
+func enhanceItemParserWithComments(itemHead *rifx.List, item *aep.Item) error {
 	// Check for comment blocks using existing pattern
 	commentBlocks := itemHead.Filter(func(b *rifx.Block) bool {
 		return b.Type == "cmta"
 	})
 	
 	// Parse each comment following the established iteration pattern
-	for _, cmtaBlock := range commentBlocks {
+	for _, cmtaBlock := range commentBlocks.Blocks {
 		comment, err := parseCommentData(cmtaBlock)
 		if err != nil {
 			return err

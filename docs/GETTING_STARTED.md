@@ -12,7 +12,6 @@ This guide will help you get MoBot 2025 up and running on your system. Whether y
 
 ### Software Requirements
 - **Go**: Version 1.19 or higher
-- **Python**: Version 3.8+ (for Python bridge)
 - **Git**: For cloning the repository
 - **SQLite**: Version 3.x (usually pre-installed)
 
@@ -24,7 +23,7 @@ This guide will help you get MoBot 2025 up and running on your system. Whether y
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/mobot2025.git
+git clone https://github.com/mojosolo/mobot2025.git
 cd mobot2025
 ```
 
@@ -40,7 +39,7 @@ go mod download
 # Build the main binary
 go build -o mobot ./cmd/mobot2025/main.go
 
-# Note: The catalog package has compilation issues that need to be resolved
+# All packages now build successfully!
 ```
 
 ### 4. Verify Installation
@@ -55,14 +54,18 @@ go test ./...
 
 ## 🏃 Quick Start
 
+### ⚠️ Important: Test Data Required
+
+**AEP files are NOT included in this repository.** You'll need to provide your own AEP files for testing. See [TEST_DATA_README.md](../TEST_DATA_README.md) for more information.
+
 ### Option 1: Command Line Interface
 
 ```bash
-# Parse a single AEP file
-./mobot parse sample.aep
+# Parse a single AEP file (requires your own AEP file)
+./mobot parse -file your-file.aep
 
 # Parse and analyze
-./mobot analyze sample.aep
+./mobot analyze -file your-file.aep
 
 # Start interactive mode
 ./mobot interactive
@@ -72,7 +75,7 @@ go test ./...
 
 ```bash
 # Start the API server (default port: 8080)
-./mobot api
+./mobot serve
 
 # Or specify a custom port
 ./mobot api --port 8090
@@ -91,7 +94,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/yourusername/mobot2025/catalog"
+    "github.com/mojosolo/mobot2025/catalog"
 )
 
 func main() {
@@ -102,8 +105,8 @@ func main() {
     }
     defer cat.Close()
 
-    // Import an AEP file
-    template, err := cat.ImportTemplate("sample.aep")
+    // Import an AEP file (requires real AEP file)
+    template, err := cat.ImportTemplate("your-project.aep")
     if err != nil {
         log.Fatal(err)
     }
@@ -130,12 +133,12 @@ from mobot2025 import MoBot
 # Initialize MoBot
 mobot = MoBot()
 
-# Parse AEP file
-result = mobot.parse_aep("sample.aep")
+# Parse AEP file (requires real AEP file)
+result = mobot.parse_aep("your-project.aep")
 print(f"Found {len(result['blocks'])} blocks")
 
 # Get automation score
-score = mobot.calculate_automation_score("sample.aep")
+score = mobot.calculate_automation_score("your-project.aep")
 print(f"Automation potential: {score:.2%}")
 ```
 
@@ -153,9 +156,9 @@ print(f"Automation potential: {score:.2%}")
 ### Basic API Operations
 
 ```bash
-# Import a template
+# Import a template (requires real AEP file)
 curl -X POST http://localhost:8080/api/templates/import \
-  -F "file=@sample.aep" \
+  -F "file=@your-project.aep" \
   -H "Accept: application/json"
 
 # List all templates
@@ -345,12 +348,13 @@ Expected response:
 ### 2. API Test
 
 ```bash
-# Create a test file
-echo '{"test": "data"}' > test.aep
+# Note: This requires a real AEP file
+# The echo command creates a fake file that won't parse correctly
+# Use a real Adobe After Effects project file instead
 
-# Try importing
+# Try importing (requires real AEP file)
 curl -X POST http://localhost:8080/api/templates/import \
-  -F "file=@test.aep"
+  -F "file=@your-project.aep"
 ```
 
 ### 3. Agent Test
@@ -421,7 +425,7 @@ Now that you have MoBot 2025 running:
 If you encounter issues:
 
 1. Check the [Troubleshooting Guide](TROUBLESHOOTING.md)
-2. Search existing [GitHub Issues](https://github.com/yourusername/mobot2025/issues)
+2. Search existing [GitHub Issues](https://github.com/mojosolo/mobot2025/issues)
 3. Join our [Discord Community](https://discord.gg/mobot2025)
 4. Create a new issue with:
    - System information

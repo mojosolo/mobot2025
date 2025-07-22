@@ -1,32 +1,24 @@
 package helpers
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 	
-	"github.com/yourusername/mobot2025/catalog"
+	"github.com/mojosolo/mobot2025/catalog"
 )
 
 // RunDangerousAnalysis runs the DangerousAnalyzer on a real AEP file
 func RunDangerousAnalysis(t *testing.T, filename string) *catalog.DeepAnalysisResult {
 	t.Helper()
 	
-	// Create parser and analyzer
-	parser := catalog.NewParser()
+	// Create analyzer
 	analyzer := catalog.NewDangerousAnalyzer()
 	
 	// Get real file path
 	path := GetRealAEPPath(filename)
 	
-	// Parse the real file
-	metadata, err := parser.ParseAEPFile(path)
-	if err != nil {
-		t.Fatalf("Failed to parse real AEP file %s: %v", filename, err)
-	}
-	
 	// Run dangerous deep analysis
-	result, err := analyzer.PerformDeepAnalysis(metadata)
+	result, err := analyzer.AnalyzeProject(path)
 	if err != nil {
 		t.Fatalf("Failed to perform dangerous analysis on %s: %v", filename, err)
 	}
@@ -122,13 +114,13 @@ func TestRealFileEdgeCases(t *testing.T) {
 	complexPath := GetComplexRealAEPPath()
 	parser := catalog.NewParser()
 	
-	metadata, err := parser.ParseAEPFile(complexPath)
+	metadata, err := parser.ParseProject(complexPath)
 	if err != nil {
 		t.Logf("Complex file parsing: %v (this may be expected)", err)
 	} else {
 		t.Logf("Complex file parsed successfully:")
 		t.Logf("  Name: %s", filepath.Base(complexPath))
-		t.Logf("  Compositions: %d", metadata.Compositions)
+		t.Logf("  Compositions: %d", len(metadata.Compositions))
 		t.Logf("  Text Layers: %d", len(metadata.TextLayers))
 		t.Logf("  Media Assets: %d", len(metadata.MediaAssets))
 	}

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 func main() {
 	fmt.Println("🎬 Ai Text Intro Project Analysis Summary")
-	fmt.Println("========================================\n")
+	fmt.Println("========================================")
 	
 	// Parse your sample AEP file
 	sampleFile := "sample-aep/Ai Text Intro.aep"

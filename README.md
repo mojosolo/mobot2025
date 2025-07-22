@@ -4,7 +4,6 @@
   <img src="https://img.shields.io/badge/Phase%201-Complete-green?style=for-the-badge" alt="Phase 1 Complete">
   <img src="https://img.shields.io/badge/Phase%202-Complete-green?style=for-the-badge" alt="Phase 2 Complete">
   <img src="https://img.shields.io/badge/Go-1.19+-00ADD8?style=for-the-badge&logo=go" alt="Go Version">
-  <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python" alt="Python Version">
 </div>
 
 ## 🚨 Current Status
@@ -25,13 +24,13 @@
 - **📈 Quality Assurance**: Pattern matching and anti-pattern detection
 - **🏗️ Batch Processing**: Concurrent processing of multiple templates
 - **📡 REST API**: Production-ready API for all features
-- **🐍 Python Bridge**: Python integration layer (Note: requires external mobot module)
+- **💾 SQLite Database**: Persistent catalog storage with full-text search
 
 ## 📋 Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mobot2025.git
+git clone https://github.com/mojosolo/mobot2025.git
 cd mobot2025
 
 # Build the project
@@ -41,7 +40,7 @@ go build -o mobot ./cmd/mobot2025/main.go
 ./mobot serve
 
 # Or use as a Go library
-go get github.com/yourusername/mobot2025
+go get github.com/mojosolo/mobot2025
 ```
 
 ### Verify Your Setup
@@ -51,17 +50,21 @@ go get github.com/yourusername/mobot2025
 ./verify-setup.sh
 ```
 
+### ⚠️ Important: Test Data Not Included
+
+**AEP files and other binary test data are NOT included in this repository.** See [TEST_DATA_README.md](TEST_DATA_README.md) for instructions on obtaining test files.
+
 ### Working Example
 
 ```bash
-# Parse a sample AEP file
-./mobot parse -file data/BPC-8.aep
+# Parse an AEP file (you must provide your own AEP file)
+./mobot parse -file your-project.aep
 
-# Analyze with dangerous mode
-./mobot analyze -file data/BPC-16.aep
+# Analyze an AEP file (you must provide your own AEP file)
+./mobot analyze -file your-project.aep
 
-# Import template to catalog
-./mobot import data/BPC-32.aep
+# Import template to catalog (you must provide your own AEP file)
+./mobot import your-project.aep
 ```
 
 For detailed setup instructions, see [Getting Started Guide](docs/GETTING_STARTED.md).
@@ -152,13 +155,13 @@ For complete architecture details, see [Architecture Documentation](docs/ARCHITE
 ### As a Go Library
 
 ```go
-import "github.com/yourusername/mobot2025/catalog"
+import "github.com/mojosolo/mobot2025/catalog"
 
 // Create a new catalog
 cat := catalog.NewCatalog("templates.db")
 
-// Import an AEP file
-template, err := cat.ImportTemplate("project.aep")
+// Import an AEP file (you must provide your own AEP file)
+template, err := cat.ImportTemplate("your-project.aep")
 
 // Search for templates
 results := cat.Search("motion graphics", catalog.SearchOptions{
@@ -173,9 +176,9 @@ score := cat.CalculateAutomationScore(template)
 ### REST API
 
 ```bash
-# Import a template
+# Import a template (you must provide your own AEP file)
 curl -X POST http://localhost:8080/api/templates/import \
-  -F "file=@project.aep"
+  -F "file=@your-project.aep"
 
 # Search templates
 curl "http://localhost:8080/api/templates/search?q=motion+graphics&type=semantic"
@@ -192,15 +195,15 @@ from mobot2025 import Catalog
 # Initialize catalog
 catalog = Catalog("templates.db")
 
-# Analyze template
-template = catalog.import_template("project.aep")
+# Analyze template (you must provide your own AEP file)
+template = catalog.import_template("your-project.aep")
 score = catalog.get_automation_score(template.id)
 
-# Batch process templates
+# Batch process templates (you must provide your own AEP files)
 results = catalog.batch_process([
-    "template1.aep",
-    "template2.aep",
-    "template3.aep"
+    "your-template1.aep",
+    "your-template2.aep",
+    "your-template3.aep"
 ])
 ```
 
@@ -218,11 +221,11 @@ results = catalog.batch_process([
 mobot2025/
 ├── catalog/          # Core business logic and agents
 ├── cmd/              # Command-line entry points
-├── data/             # Test AEP files
+├── data/             # Directory for test data (AEP files NOT included)
 ├── demo/             # Demo applications and viewers
 ├── docs/             # Documentation
 ├── enhancements/     # Enhancement modules
-├── sample-aep/       # Sample AEP projects
+├── sample-aep/       # Directory for sample projects (AEP files NOT included)
 ├── sandbox/          # Temporary files and test scripts (not for production)
 │   ├── scripts/      # Shell/Python scripts used during development
 │   ├── tests/        # One-off test files
@@ -231,11 +234,13 @@ mobot2025/
 └── tests/            # Organized test suite
 ```
 
+**Note**: The `data/` and `sample-aep/` directories are placeholders. You must provide your own AEP files for testing. Binary files (AEP, video, PDF, etc.) are excluded from version control to keep the repository lightweight.
+
 ### Building from Source
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/mobot2025.git
+git clone https://github.com/mojosolo/mobot2025.git
 cd mobot2025
 
 # Install dependencies
@@ -275,7 +280,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - 📧 Email: support@mobot2025.ai
 - 💬 Discord: [Join our community](https://discord.gg/mobot2025)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/mobot2025/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/mojosolo/mobot2025/issues)
 
 ---
 

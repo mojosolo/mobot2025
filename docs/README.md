@@ -111,7 +111,7 @@ If you can't find what you need:
 
 1. Search documentation using your browser's find function
 2. Check [Troubleshooting](TROUBLESHOOTING.md) for common issues
-3. Visit our [GitHub Issues](https://github.com/yourusername/mobot2025/issues)
+3. Visit our [GitHub Issues](https://github.com/mojosolo/mobot2025/issues)
 4. Join our [Discord Community](https://discord.gg/mobot2025)
 
 ---

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 // GetRealAEPPath returns the absolute path to a real AEP file in the data directory

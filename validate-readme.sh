@@ -49,7 +49,7 @@ echo ""
 # Test 5: Module name
 echo "5. Checking module name..."
 MODULE_NAME=$(grep "^module" go.mod | awk '{print $2}')
-if [ "$MODULE_NAME" = "github.com/yourusername/mobot2025" ]; then
+if [ "$MODULE_NAME" = "github.com/mojosolo/mobot2025" ]; then
     echo "   ✅ Module name is correct: $MODULE_NAME"
 else
     echo "   ❌ Module name is wrong: $MODULE_NAME"
@@ -57,7 +57,7 @@ fi
 echo ""
 
 echo "📋 Summary:"
-echo "- Repository: github.com/yourusername/mobot2025 ✅"
+echo "- Repository: github.com/mojosolo/mobot2025 ✅"
 echo "- Module name: Correctly updated ✅"
 echo "- Build: Successful ✅"
 echo "- Catalog: Fixed and working ✅"

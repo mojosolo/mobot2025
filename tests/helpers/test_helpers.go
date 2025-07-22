@@ -1,16 +1,14 @@
 package helpers
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/yourusername/mobot2025/catalog"
+	"github.com/mojosolo/mobot2025/catalog"
 )
 
 // RealTestFixtures provides paths to REAL test fixture files
@@ -72,7 +70,7 @@ func ParseRealAEPFile(t *testing.T, fixturePath string) *catalog.ProjectMetadata
 	t.Helper()
 	
 	parser := catalog.NewParser()
-	metadata, err := parser.ParseAEPFile(fixturePath)
+	metadata, err := parser.ParseProject(fixturePath)
 	if err != nil {
 		t.Fatalf("Failed to parse real AEP file %s: %v", fixturePath, err)
 	}
@@ -96,8 +94,8 @@ func CompareRealProjects(t *testing.T, expected, actual *catalog.ProjectMetadata
 		t.Errorf("ExpressionEngine mismatch: expected %s, got %s", expected.ExpressionEngine, actual.ExpressionEngine)
 	}
 	
-	if expected.Compositions != actual.Compositions {
-		t.Errorf("Composition count mismatch: expected %d, got %d", expected.Compositions, actual.Compositions)
+	if len(expected.Compositions) != len(actual.Compositions) {
+		t.Errorf("Composition count mismatch: expected %d, got %d", len(expected.Compositions), len(actual.Compositions))
 	}
 }
 
@@ -237,7 +235,7 @@ func ValidateRealParsingResult(t *testing.T, metadata *catalog.ProjectMetadata) 
 	}
 	
 	// Real AEP files should have some content
-	if metadata.TotalItems == 0 && metadata.Compositions == 0 {
+	if metadata.TotalItems == 0 && len(metadata.Compositions) == 0 {
 		t.Error("No items or compositions found - suspicious for real AEP file")
 	}
 }
@@ -252,7 +250,7 @@ func DumpRealMetadata(t *testing.T, metadata *catalog.ProjectMetadata) {
 	t.Logf("BitDepth: %d", metadata.BitDepth)
 	t.Logf("ExpressionEngine: %s", metadata.ExpressionEngine)
 	t.Logf("Total Items: %d", metadata.TotalItems)
-	t.Logf("Compositions: %d", metadata.Compositions)
+	t.Logf("Compositions: %d", len(metadata.Compositions))
 	t.Logf("Text Layers: %d", len(metadata.TextLayers))
 	t.Logf("Media Assets: %d", len(metadata.MediaAssets))
 	t.Logf("Effects: %d", len(metadata.Effects))

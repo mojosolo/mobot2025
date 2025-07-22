@@ -8,7 +8,7 @@
 - Maintained clean project structure for new developers
 
 ### 2. Repository Migration ✅
-- Changed all references from `boltframe/aftereffects-aep-parser` to `yourusername/mobot2025`
+- Changed all references from `boltframe/aftereffects-aep-parser` to `mojosolo/mobot2025`
 - Updated go.mod module name
 - Fixed all 28 import statements across the codebase
 

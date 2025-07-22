@@ -1,6 +1,6 @@
 # 🔧 MoBot 2025 Troubleshooting Guide
 
-This guide helps you resolve common issues with MoBot 2025. If you can't find a solution here, please check our [GitHub Issues](https://github.com/yourusername/mobot2025/issues) or join our [Discord Community](https://discord.gg/mobot2025).
+This guide helps you resolve common issues with MoBot 2025. If you can't find a solution here, please check our [GitHub Issues](https://github.com/mojosolo/mobot2025/issues) or join our [Discord Community](https://discord.gg/mobot2025).
 
 ## Table of Contents
 
@@ -48,7 +48,7 @@ sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
 go mod download
 
 # If go.mod is missing
-go mod init github.com/yourusername/mobot2025
+go mod init github.com/mojosolo/mobot2025
 go mod tidy
 ```
 

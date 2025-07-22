@@ -29,20 +29,20 @@ The demo tools have been reorganized into the `cmd/` directory for better organi
 
 ## Running the Tools
 
-Each tool can be run independently:
+Each tool can be run independently. Note that you must provide your own AEP files:
 
 ```bash
-# Run story viewer
-go run cmd/story-viewer/simple.go data/sample.aep
+# Run story viewer (provide your own AEP file)
+go run cmd/story-viewer/simple.go your-project.aep
 
-# Run text extractor
-go run cmd/text-extractor/debug.go data/sample.aep
+# Run text extractor (provide your own AEP file)
+go run cmd/text-extractor/debug.go your-project.aep
 
-# Run report generator
-go run cmd/report-generator/html.go data/sample.aep
+# Run report generator (provide your own AEP file)
+go run cmd/report-generator/html.go your-project.aep
 
-# Run scanner
-go run cmd/scanner/main.go data/
+# Run scanner (provide directory with your AEP files)
+go run cmd/scanner/main.go your-aep-directory/
 ```
 
 ## Main Demo

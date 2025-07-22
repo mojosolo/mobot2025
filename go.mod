@@ -1,4 +1,4 @@
-module github.com/yourusername/mobot2025
+module github.com/mojosolo/mobot2025
 
 go 1.19
 

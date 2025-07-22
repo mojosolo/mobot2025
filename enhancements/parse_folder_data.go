@@ -1,6 +1,9 @@
-package aep
+package enhancements
 
-import "github.com/rioam2/rifx"
+import (
+	"github.com/rioam2/rifx"
+	aep "github.com/mojosolo/mobot2025"
+)
 
 // Enhancement: Parse folder data blocks (fdta)
 // Extends existing folder parsing capabilities
@@ -40,7 +43,7 @@ func parseFolderData(block *rifx.Block) (*FolderMetadata, error) {
 
 // Integration point: Add to parseItem at the folder case (line 89)
 // This extends the existing folder parsing logic
-func enhanceFolderParsing(itemHead *rifx.List, item *Item) error {
+func enhanceFolderParsing(itemHead *rifx.List, item *aep.Item) error {
 	// Use existing FindByType pattern
 	fdtaBlock, err := itemHead.FindByType("fdta")
 	if err == nil { // Optional block, don't fail if missing

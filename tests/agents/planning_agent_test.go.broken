@@ -1,0 +1,325 @@
+package agents_test
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/mojosolo/mobot2025/catalog"
+)
+
+// TestPlanningAgentAnalysis tests the planning agent's ability to analyze AEP projects
+func TestPlanningAgentAnalysis(t *testing.T) {
+	// Create a temporary database for testing
+	db, err := catalog.NewDatabase(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer db.Close()
+	
+	agent := catalog.NewPlanningAgent(db)
+
+	tests := []struct {
+		name        string
+		metadata    *catalog.ProjectMetadata
+		wantTasks   int
+		wantError   bool
+		description string
+	}{
+		{
+			name: "simple_project",
+			metadata: &catalog.ProjectMetadata{
+				FilePath:         "simple.aep",
+				FileName:         "simple.aep",
+				FileSize:         1024,
+				BitDepth:         8,
+				ExpressionEngine: "javascript",
+				Compositions: []catalog.CompositionInfo{
+					{ID: "comp1", Name: "Main", Width: 1920, Height: 1080},
+				},
+				TextLayers:   []catalog.TextLayerInfo{
+					{SourceText: "Hello World", LayerName: "Title"},
+				},
+			},
+			wantTasks:   3, // Basic analysis, text processing, optimization
+			wantError:   false,
+			description: "Should generate basic tasks for simple project",
+		},
+		{
+			name: "complex_project",
+			metadata: &catalog.ProjectMetadata{
+				FilePath:         "corporate.aep",
+				FileName:         "corporate.aep",
+				FileSize:         102400,
+				BitDepth:         16,
+				ExpressionEngine: "javascript",
+				Compositions: []catalog.CompositionInfo{
+					{ID: "comp1", Name: "Main", Width: 1920, Height: 1080},
+					{ID: "comp2", Name: "Intro", Width: 1920, Height: 1080},
+					{ID: "comp3", Name: "Outro", Width: 1920, Height: 1080},
+				},
+				TextLayers:   []catalog.TextLayerInfo{
+					{SourceText: "Title", LayerName: "Main Title"},
+					{SourceText: "Subtitle", LayerName: "Subtitle"},
+					{SourceText: "Body Text", LayerName: "Description"},
+				},
+				MediaAssets: []catalog.MediaAssetInfo{
+					{Name: "background.mp4", Type: "video"},
+					{Name: "logo.png", Type: "image"},
+				},
+			},
+			wantTasks:   8, // More tasks for complex project
+			wantError:   false,
+			description: "Should generate comprehensive tasks for complex project",
+		},
+		{
+			name:        "empty_project",
+			metadata:    &catalog.ProjectMetadata{},
+			wantTasks:   0,
+			wantError:   true,
+			description: "Should error on empty project metadata",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan, err := agent.AnalyzeProject(tt.metadata)
+			
+			if (err != nil) != tt.wantError {
+				t.Errorf("AnalyzeProject() error = %v, wantError %v", err, tt.wantError)
+				return
+			}
+
+			if !tt.wantError {
+				if len(plan.Tasks) != tt.wantTasks {
+					t.Errorf("Expected %d tasks, got %d", tt.wantTasks, len(plan.Tasks))
+				}
+
+				// Verify plan has essential components
+				if plan.ProjectID == "" {
+					t.Error("Plan missing project ID")
+				}
+				if plan.CreatedAt.IsZero() {
+					t.Error("Plan missing creation timestamp")
+				}
+			}
+		})
+	}
+}
+
+// TestPlanningAgentPrioritization tests task prioritization logic
+func TestPlanningAgentPrioritization(t *testing.T) {
+	db, err := catalog.NewDatabase(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer db.Close()
+	
+	agent := catalog.NewPlanningAgent(db)
+
+	metadata := &catalog.ProjectMetadata{
+		FilePath:         "priority.aep",
+		FileName:         "priority.aep",
+		FileSize:         10240,
+		BitDepth:         8,
+		ExpressionEngine: "javascript",
+		Compositions: []catalog.CompositionInfo{
+			{ID: "comp1", Name: "Main", Width: 1920, Height: 1080},
+			{ID: "comp2", Name: "Error Comp", Width: 1920, Height: 1080, HasEffects: true},
+		},
+		TextLayers: []catalog.TextLayerInfo{
+			{SourceText: "Missing Font Text", LayerName: "Title", FontUsed: "MissingFont"},
+		},
+	}
+
+	plan, err := agent.AnalyzeProject(metadata)
+	if err != nil {
+		t.Fatalf("Failed to analyze project: %v", err)
+	}
+
+	// Find error resolution task
+	var errorTask *catalog.Task
+	for _, task := range plan.Tasks {
+		if task.Type == catalog.TaskTypeErrorResolution {
+			errorTask = &task
+			break
+		}
+	}
+
+	if errorTask == nil {
+		t.Fatal("Expected error resolution task for project with errors")
+	}
+
+	if errorTask.Priority != catalog.PriorityHigh {
+		t.Errorf("Error resolution task should have high priority, got %s", errorTask.Priority)
+	}
+}
+
+// TestPlanningAgentConcurrency tests concurrent project analysis
+func TestPlanningAgentConcurrency(t *testing.T) {
+	db, err := catalog.NewDatabase(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer db.Close()
+	
+	agent := catalog.NewPlanningAgent(db)
+	
+	// Create multiple projects to analyze concurrently
+	projects := make([]*catalog.ProjectMetadata, 10)
+	for i := range projects {
+		projects[i] = &catalog.ProjectMetadata{
+			FilePath:         fmt.Sprintf("project%d.aep", i),
+			FileName:         fmt.Sprintf("project%d.aep", i),
+			FileSize:         int64(1024 * (i + 1)),
+			BitDepth:         8,
+			ExpressionEngine: "javascript",
+			Compositions: []catalog.CompositionInfo{
+				{ID: fmt.Sprintf("comp%d", i), Name: "Main", Width: 1920, Height: 1080},
+			},
+		}
+	}
+
+	// Analyze all projects concurrently
+	results := make(chan error, len(projects))
+	
+	for i, project := range projects {
+		go func(p *catalog.ProjectMetadata, idx int) {
+			tempFile := fmt.Sprintf("/tmp/concurrent_%d.aep", idx)
+			_, err := agent.AnalyzeAndPlan(tempFile)
+			results <- err
+		}(project, i)
+	}
+
+	// Collect results
+	for i := 0; i < len(projects); i++ {
+		select {
+		case err := <-results:
+			if err != nil {
+				t.Errorf("Concurrent analysis failed: %v", err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("Concurrent analysis timed out")
+		}
+	}
+}
+
+// TestPlanningAgentValidation tests input validation
+func TestPlanningAgentValidation(t *testing.T) {
+	db, err := catalog.NewDatabase(":memory:")
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer db.Close()
+	
+	agent := catalog.NewPlanningAgent(db)
+
+	invalidInputs := []struct {
+		name     string
+		metadata *catalog.ProjectMetadata
+		wantErr  string
+	}{
+		{
+			name:     "nil_metadata",
+			metadata: nil,
+			wantErr:  "project metadata is nil",
+		},
+		{
+			name: "invalid_version",
+			metadata: &catalog.ProjectMetadata{
+				FilePath:         "old.aep",
+				FileName:         "old.aep",
+				FileSize:         1024,
+				BitDepth:         8,
+				ExpressionEngine: "extendscript", // Old engine
+			},
+			wantErr: "unsupported After Effects version",
+		},
+		{
+			name: "corrupted_data",
+			metadata: &catalog.ProjectMetadata{
+				FilePath:         "corrupted.aep",
+				FileName:         "corrupted.aep",
+				FileSize:         -1, // Invalid file size
+				BitDepth:         8,
+				ExpressionEngine: "javascript",
+			},
+			wantErr: "invalid composition count",
+		},
+	}
+
+	for _, tt := range invalidInputs {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := agent.AnalyzeProject(tt.metadata)
+			if err == nil {
+				t.Fatal("Expected validation error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("Expected error containing %q, got %q", tt.wantErr, err.Error())
+			}
+		})
+	}
+}
+
+// BenchmarkPlanningAgentAnalysis benchmarks the planning agent
+func BenchmarkPlanningAgentAnalysis(b *testing.B) {
+	db, err := catalog.NewDatabase(":memory:")
+	if err != nil {
+		b.Fatalf("Failed to create test database: %v", err)
+	}
+	defer db.Close()
+	
+	agent := catalog.NewPlanningAgent(db)
+	
+	// Create a complex project for benchmarking
+	// Create text layers
+	textLayers := make([]catalog.TextLayerInfo, 100)
+	for i := range textLayers {
+		textLayers[i] = catalog.TextLayerInfo{
+			LayerName: fmt.Sprintf("Layer%d", i),
+			SourceText: fmt.Sprintf("Text %d", i),
+		}
+	}
+	
+	// Create media assets
+	mediaAssets := make([]catalog.MediaAssetInfo, 200)
+	for i := range mediaAssets {
+		mediaAssets[i] = catalog.MediaAssetInfo{
+			ID: fmt.Sprintf("asset%d", i),
+			Name: fmt.Sprintf("Asset %d", i),
+			Type: "image",
+		}
+	}
+	
+	// Create compositions
+	compositions := make([]catalog.CompositionInfo, 50)
+	for i := range compositions {
+		compositions[i] = catalog.CompositionInfo{
+			ID: fmt.Sprintf("comp%d", i),
+			Name: fmt.Sprintf("Composition %d", i),
+			Width: 1920,
+			Height: 1080,
+		}
+	}
+	
+	metadata := &catalog.ProjectMetadata{
+		FilePath:         "benchmark.aep",
+		FileName:         "benchmark.aep",
+		FileSize:         1048576,
+		BitDepth:         16,
+		ExpressionEngine: "javascript",
+		Compositions:     compositions,
+		TextLayers:       textLayers,
+		MediaAssets:      mediaAssets,
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := agent.AnalyzeProject(metadata)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

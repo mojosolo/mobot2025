@@ -1,13 +1,12 @@
 package main
 
 import (
-    "encoding/json"
     "flag"
     "fmt"
     "log"
     "os"
     
-    "github.com/yourusername/mobot2025/catalog"
+    "github.com/mojosolo/mobot2025/catalog"
 )
 
 func main() {

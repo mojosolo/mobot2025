@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 // StoryElement represents a text element in the narrative order (Easy Mode)

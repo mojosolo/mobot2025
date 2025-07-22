@@ -20,7 +20,6 @@ This guide provides comprehensive information for developers who want to contrib
 ### Prerequisites
 
 - Go 1.19 or higher
-- Python 3.8+ (for Python bridge)
 - Git
 - Make (optional but recommended)
 - golangci-lint (for linting)
@@ -29,7 +28,7 @@ This guide provides comprehensive information for developers who want to contrib
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mobot2025.git
+git clone https://github.com/mojosolo/mobot2025.git
 cd mobot2025
 
 # Install Go dependencies
@@ -43,10 +42,8 @@ go install golang.org/x/tools/cmd/goimports@latest
 cp scripts/pre-commit .git/hooks/
 chmod +x .git/hooks/pre-commit
 
-# Set up Python environment (optional)
-cd bridge/python
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+# Build the project
+go build ./...
 pip install -e ".[dev]"
 ```
 
@@ -527,69 +524,23 @@ make build
 make build-all
 ```
 
-### Docker
+### Deployment
 
-```dockerfile
-# Dockerfile
-FROM golang:1.19-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN go mod download
-RUN go build -ldflags="-s -w" -o mobot cmd/parser/main.go
+The application can be deployed as a standalone binary:
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/mobot .
-EXPOSE 8080
-CMD ["./mobot", "api"]
+```bash
+# Build for production
+go build -ldflags="-s -w" -o mobot ./cmd/mobot2025/main.go
+
+# Run the API server
+./mobot serve --port 8080
 ```
 
-### Deployment Options
-
-#### 1. Systemd Service
-```ini
-[Unit]
-Description=MoBot 2025 API Service
-After=network.target
-
-[Service]
-Type=simple
-User=mobot
-WorkingDirectory=/opt/mobot
-ExecStart=/opt/mobot/mobot api
-Restart=always
-Environment=MOBOT_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-```
-
-#### 2. Kubernetes
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mobot-api
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: mobot-api
-  template:
-    metadata:
-      labels:
-        app: mobot-api
-    spec:
-      containers:
-      - name: mobot
-        image: mobot2025:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: MOBOT_ENV
-          value: "production"
-```
+For production deployments:
+1. Build the binary with optimization flags
+2. Set appropriate environment variables
+3. Configure logging and monitoring
+4. Use a process manager (systemd, supervisor) for automatic restarts
 
 ## Contributing
 

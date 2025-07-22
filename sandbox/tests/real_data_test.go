@@ -1,9 +1,16 @@
-package aep
+// Package tests contains tests that require real AEP data files.
+// These files are NOT included in the repository for licensing reasons.
+// Tests will skip if data files are not present.
+// See README.md for instructions on obtaining test data.
+package tests
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+	
+	aep "github.com/mojosolo/mobot2025"
 )
 
 // getRealAEPPath returns the path to a real AEP file in the data directory
@@ -18,13 +25,13 @@ func TestRealAEPParsing(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
-		validate func(*testing.T, *Project)
+		validate func(*testing.T, *aep.Project)
 	}{
 		{
 			name:     "8-bit color depth",
 			filename: "BPC-8.aep",
-			validate: func(t *testing.T, p *Project) {
-				if p.Depth != BPC8 {
+			validate: func(t *testing.T, p *aep.Project) {
+				if p.Depth != aep.BPC8 {
 					t.Errorf("Expected 8-bit depth, got %v", p.Depth)
 				}
 			},
@@ -32,8 +39,8 @@ func TestRealAEPParsing(t *testing.T) {
 		{
 			name:     "16-bit color depth",
 			filename: "BPC-16.aep",
-			validate: func(t *testing.T, p *Project) {
-				if p.Depth != BPC16 {
+			validate: func(t *testing.T, p *aep.Project) {
+				if p.Depth != aep.BPC16 {
 					t.Errorf("Expected 16-bit depth, got %v", p.Depth)
 				}
 			},
@@ -41,8 +48,8 @@ func TestRealAEPParsing(t *testing.T) {
 		{
 			name:     "32-bit color depth",
 			filename: "BPC-32.aep",
-			validate: func(t *testing.T, p *Project) {
-				if p.Depth != BPC32 {
+			validate: func(t *testing.T, p *aep.Project) {
+				if p.Depth != aep.BPC32 {
 					t.Errorf("Expected 32-bit depth, got %v", p.Depth)
 				}
 			},
@@ -50,7 +57,7 @@ func TestRealAEPParsing(t *testing.T) {
 		{
 			name:     "JavaScript expression engine",
 			filename: "ExEn-js.aep",
-			validate: func(t *testing.T, p *Project) {
+			validate: func(t *testing.T, p *aep.Project) {
 				if p.ExpressionEngine == "" {
 					t.Error("Expected JavaScript expression engine")
 				}
@@ -59,7 +66,7 @@ func TestRealAEPParsing(t *testing.T) {
 		{
 			name:     "ExtendScript expression engine",
 			filename: "ExEn-es.aep",
-			validate: func(t *testing.T, p *Project) {
+			validate: func(t *testing.T, p *aep.Project) {
 				if p.ExpressionEngine == "" {
 					t.Error("Expected ExtendScript expression engine")
 				}
@@ -72,8 +79,14 @@ func TestRealAEPParsing(t *testing.T) {
 			// Get real file path
 			path := getRealAEPPath(tt.filename)
 			
+			// Check if file exists - skip if not
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				t.Skipf("Test data file not found: %s (expected - see README.md)", tt.filename)
+				return
+			}
+			
 			// Load and parse real AEP file
-			project, err := Open(path)
+			project, err := aep.Open(path)
 			if err != nil {
 				t.Fatalf("Failed to load real AEP file: %v", err)
 			}
@@ -98,8 +111,14 @@ func TestRealAEPParsing(t *testing.T) {
 func TestComplexRealAEP(t *testing.T) {
 	path := filepath.Join("sample-aep", "Ai Text Intro.aep")
 	
+	// Check if file exists - skip if not
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t.Skip("Complex test file not found: sample-aep/Ai Text Intro.aep (expected - see README.md)")
+		return
+	}
+	
 	// This file might be complex and fail - that's OK for now
-	project, err := Open(path)
+	project, err := aep.Open(path)
 	if err != nil {
 		t.Logf("Complex AEP parsing failed (expected): %v", err)
 		return
@@ -115,11 +134,11 @@ func TestComplexRealAEP(t *testing.T) {
 	var folders, comps, footage int
 	for _, item := range project.Items {
 		switch item.ItemType {
-		case ItemTypeFolder:
+		case aep.ItemTypeFolder:
 			folders++
-		case ItemTypeComposition:
+		case aep.ItemTypeComposition:
 			comps++
-		case ItemTypeFootage:
+		case aep.ItemTypeFootage:
 			footage++
 		}
 	}
@@ -134,9 +153,15 @@ func BenchmarkRealAEPParsing(b *testing.B) {
 	// Benchmark parsing the Layer-01.aep file
 	path := getRealAEPPath("Layer-01.aep")
 	
+	// Skip if file doesn't exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		b.Skip("Benchmark data file not found: Layer-01.aep (expected - see README.md)")
+		return
+	}
+	
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := Open(path)
+		_, err := aep.Open(path)
 		if err != nil {
 			b.Fatal(err)
 		}

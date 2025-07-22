@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	
-	aep "github.com/yourusername/mobot2025"
+	aep "github.com/mojosolo/mobot2025"
 )
 
 func main() {
