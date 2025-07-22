@@ -1,0 +1,30 @@
+{
+  "composition_name": "Main",
+  "quality": "high",
+  "text_replacements": {
+    "title": "Amazing Product Launch 2025",
+    "subtitle": "Innovation Meets Excellence",
+    "date": "03/15/2025",
+    "location": "San Francisco, CA",
+    "cta_text": "Learn More",
+    "price": "$99.99"
+  },
+  "media_replacements": {
+    "logo_placeholder_url": "https://example.com/company-logo.png",
+    "product_image_url": "https://example.com/product-hero.jpg",
+    "background_video_url": "https://example.com/background.mp4"
+  },
+  "output_path": "./renders/output_video.mp4",
+  "upload_destination": "s3://my-bucket/videos/",
+  "upload_provider": "s3",
+  "upload_options": {
+    "region": "us-west-2",
+    "acl": "public-read"
+  },
+  "notification_webhook": "https://api.example.com/webhooks/render-complete",
+  "job_metadata": {
+    "project_id": "proj_123",
+    "client_id": "client_456",
+    "campaign": "spring_2025"
+  }
+}

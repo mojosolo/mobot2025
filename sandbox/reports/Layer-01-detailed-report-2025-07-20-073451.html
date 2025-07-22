@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEP Detailed Analysis - Layer-01.aep</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .tabs {
+            background: white;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .tab-list {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-button {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab-button:hover {
+            color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+        }
+        
+        tr {
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin: 0 2px;
+        }
+        
+        .badge-4k { background: #10b981; color: white; }
+        .badge-hd { background: #3b82f6; color: white; }
+        .badge-3d { background: #f59e0b; color: white; }
+        .badge-solo { background: #ef4444; color: white; }
+        .badge-adjustment { background: #8b5cf6; color: white; }
+        .badge-effects { background: #ec4899; color: white; }
+        .badge-video { background: #06b6d4; color: white; }
+        .badge-image { background: #84cc16; color: white; }
+        .badge-solid { background: #6b7280; color: white; }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .tree-view {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .tree-node {
+            margin-left: 20px;
+            padding: 5px 0;
+        }
+        
+        .tree-node-root {
+            margin-left: 0;
+            font-weight: bold;
+        }
+        
+        .tree-icon {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+        }
+        
+        .comp-detail {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .comp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .comp-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .comp-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            background: white;
+            margin-top: 50px;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎬 Layer-01.aep</h1>
+        <div class="subtitle">Detailed AEP Analysis Report</div>
+        <div style="margin-top: 10px; opacity: 0.8;">Generated on July 20, 2025 at 7:34 AM</div>
+    </div>
+    
+    <div class="tabs">
+        <ul class="tab-list">
+            <li><button class="tab-button active" onclick="showTab('overview')">📊 Overview</button></li>
+            <li><button class="tab-button" onclick="showTab('compositions')">🎬 Compositions</button></li>
+            <li><button class="tab-button" onclick="showTab('layers')">📑 All Layers</button></li>
+            <li><button class="tab-button" onclick="showTab('media')">📹 Media Assets</button></li>
+            <li><button class="tab-button" onclick="showTab('text')">📝 Text Layers</button></li>
+            <li><button class="tab-button" onclick="showTab('attributes')">⚙️ Attributes</button></li>
+            <li><button class="tab-button" onclick="showTab('hierarchy')">📁 Hierarchy</button></li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        
+        <div id="overview" class="tab-content active">
+            <h2>Project Overview</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">Total Items</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">1</span>
+                    <span class="stat-label">Compositions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">1</span>
+                    <span class="stat-label">Media Assets</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">17</span>
+                    <span class="stat-label">Total Layers</span>
+                </div>
+            </div>
+            
+            <h3>Project Properties</h3>
+            <table>
+                <tr>
+                    <td><strong>Bit Depth:</strong></td>
+                    <td>8-bit</td>
+                    <td><strong>Expression Engine:</strong></td>
+                    <td>javascript-1.0</td>
+                </tr>
+                <tr>
+                    <td><strong>Folder Count:</strong></td>
+                    <td>2</td>
+                    <td><strong>Color Depth:</strong></td>
+                    <td>16.7 million colors</td>
+                </tr>
+            </table>
+            
+            
+            
+            <h3>Asset Breakdown</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Videos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Images</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Solids</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Adjustments</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">1</span>
+                    <span class="stat-label">Nulls</span>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div id="compositions" class="tab-content">
+            <h2>All Compositions (1)</h2>
+            
+            <div class="search-box">
+                <input type="text" id="comp-search" placeholder="🔍 Search compositions..." onkeyup="filterTable('comp-search', 'comp-table')">
+            </div>
+            
+            
+            
+            <div class="comp-detail">
+                <div class="comp-header">
+                    <div class="comp-title">
+                        Comp 01
+                        
+                        <span class="badge badge-hd">HD</span>
+                    </div>
+                    <div class="comp-meta">
+                        <span>📐 1920×1080</span>
+                        <span>🎞️ 60.00 fps</span>
+                        <span>⏱️ 60.00s</span>
+                        <span>📑 17 layers</span>
+                    </div>
+                </div>
+                
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="50">#</th>
+                            <th>Layer Name</th>
+                            <th>Source</th>
+                            <th>Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>1</td>
+                            <td>Transformations Collapsed</td>
+                            <td>root</td>
+                            <td>
+                                
+                                <span class="badge badge-solo">Solo</span>
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>2</td>
+                            <td>Effects Enabled</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>3</td>
+                            <td>Motion Blur</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>4</td>
+                            <td>Locked</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>5</td>
+                            <td>Shy</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>6</td>
+                            <td>Adjustment</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                <span class="badge badge-adjustment">Adjustment</span>
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>7</td>
+                            <td>3D</td>
+                            <td>Null 1</td>
+                            <td>
+                                <span class="badge badge-3d">3D</span>
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>8</td>
+                            <td>Solo</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                <span class="badge badge-solo">Solo</span>
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>9</td>
+                            <td>Guide</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>10</td>
+                            <td>Pixel Motion</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>11</td>
+                            <td>Frame Mix</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>12</td>
+                            <td>Wireframe Quality</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>13</td>
+                            <td>Draft Quality</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>14</td>
+                            <td>Best Quality</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>15</td>
+                            <td>Bilinear Sampling</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>16</td>
+                            <td>BIcubic Sampling</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>17</td>
+                            <td>Default</td>
+                            <td>Null 1</td>
+                            <td>
+                                
+                                
+                                
+                                <span class="badge badge-effects">Effects</span>
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+                
+            </div>
+            
+            
+        </div>
+        
+        
+        <div id="layers" class="tab-content">
+            <h2>All Layers (17)</h2>
+            
+            <div class="search-box">
+                <input type="text" id="layer-search" placeholder="🔍 Search layers..." onkeyup="filterTable('layer-search', 'layer-table')">
+            </div>
+            
+            
+            <table id="layer-table">
+                <thead>
+                    <tr>
+                        <th>Layer Name</th>
+                        <th>Composition</th>
+                        <th>Index</th>
+                        <th>Source</th>
+                        <th>Quality</th>
+                        <th>Properties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>Transformations Collapsed</strong></td>
+                        <td>Comp 01</td>
+                        <td>1</td>
+                        <td>root</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            <span class="badge badge-solo">Solo</span>
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            <span class="badge">Collapsed</span>
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Effects Enabled</strong></td>
+                        <td>Comp 01</td>
+                        <td>2</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Motion Blur</strong></td>
+                        <td>Comp 01</td>
+                        <td>3</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            <span class="badge">Motion Blur</span>
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Locked</strong></td>
+                        <td>Comp 01</td>
+                        <td>4</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            <span class="badge">Locked</span>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Shy</strong></td>
+                        <td>Comp 01</td>
+                        <td>5</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            <span class="badge">Shy</span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Adjustment</strong></td>
+                        <td>Comp 01</td>
+                        <td>6</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            <span class="badge badge-adjustment">Adj</span>
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>3D</strong></td>
+                        <td>Comp 01</td>
+                        <td>7</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            <span class="badge badge-3d">3D</span>
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Solo</strong></td>
+                        <td>Comp 01</td>
+                        <td>8</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            <span class="badge badge-solo">Solo</span>
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Guide</strong></td>
+                        <td>Comp 01</td>
+                        <td>9</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            <span class="badge">Guide</span>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Pixel Motion</strong></td>
+                        <td>Comp 01</td>
+                        <td>10</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Frame Mix</strong></td>
+                        <td>Comp 01</td>
+                        <td>11</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Wireframe Quality</strong></td>
+                        <td>Comp 01</td>
+                        <td>12</td>
+                        <td>Null 1</td>
+                        <td>Wireframe</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Draft Quality</strong></td>
+                        <td>Comp 01</td>
+                        <td>13</td>
+                        <td>Null 1</td>
+                        <td>Draft</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Best Quality</strong></td>
+                        <td>Comp 01</td>
+                        <td>14</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Bilinear Sampling</strong></td>
+                        <td>Comp 01</td>
+                        <td>15</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>BIcubic Sampling</strong></td>
+                        <td>Comp 01</td>
+                        <td>16</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Default</strong></td>
+                        <td>Comp 01</td>
+                        <td>17</td>
+                        <td>Null 1</td>
+                        <td>Best</td>
+                        <td>
+                            
+                            
+                            
+                            
+                            <span class="badge badge-effects">Effects</span>
+                            
+                            
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+            
+        </div>
+        
+        
+        <div id="media" class="tab-content">
+            <h2>Media Assets (1)</h2>
+            
+            <div class="search-box">
+                <input type="text" id="media-search" placeholder="🔍 Search media assets..." onkeyup="filterTable('media-search', 'media-table')">
+            </div>
+            
+            
+            <table id="media-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Dimensions</th>
+                        <th>Framerate</th>
+                        <th>Duration</th>
+                        <th>Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>Null 1</strong></td>
+                        <td>
+                            
+                            
+                            
+                            <span class="badge">Null</span>
+                            
+                        </td>
+                        <td>100×100</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>
+                            1 comp(s)
+                            
+                            <div style="font-size:0.85em; color:#666;">
+                                <span class="tag">Comp 01</span>
+                            </div>
+                            
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+            
+        </div>
+        
+        
+        <div id="text" class="tab-content">
+            <h2>Text Layers</h2>
+            
+            <div class="search-box">
+                <input type="text" id="text-search" placeholder="🔍 Search text layers..." onkeyup="filterTable('text-search', 'text-table')">
+            </div>
+            
+            
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <p>No text layers detected in this project</p>
+                <p style="margin-top:10px; font-size:0.9em; color:#999;">
+                    Note: Text content extraction requires parsing expressions and keyframes,<br>
+                    which is not yet implemented in the parser.
+                </p>
+            </div>
+            
+        </div>
+        
+        
+        <div id="attributes" class="tab-content">
+            <h2>Layer Attributes & Effects</h2>
+            
+            <div class="search-box">
+                <input type="text" id="attr-search" placeholder="🔍 Search attributes..." onkeyup="filterTable('attr-search', 'attr-table')">
+            </div>
+            
+            <p style="margin-bottom:20px; color:#666;">
+                Detailed layer attributes including transformations, effects, and expressions.
+            </p>
+            
+            
+            <div class="empty-state">
+                <div class="empty-state-icon">⚙️</div>
+                <p>Layer attribute extraction coming soon</p>
+                <p style="margin-top:10px; font-size:0.9em; color:#999;">
+                    This will include transform properties, effects, masks, and expressions.
+                </p>
+            </div>
+            
+        </div>
+        
+        
+        <div id="hierarchy" class="tab-content">
+            <h2>Project Hierarchy</h2>
+            
+            <div class="tree-view">
+                
+    <div class="tree-node ">
+        <span class="tree-icon">
+            📁
+        </span>
+        📁 Project Root
+        
+            <span style="color:#999; font-size:0.9em;">(2 items)</span>
+        
+    </div>
+    
+        
+    <div class="tree-node ">
+        <span class="tree-icon">
+            🎬
+        </span>
+        Comp 01
+        
+    </div>
+    
+
+    
+        
+    <div class="tree-node ">
+        <span class="tree-icon">
+            📁
+        </span>
+        Solids
+        
+            <span style="color:#999; font-size:0.9em;">(1 items)</span>
+        
+    </div>
+    
+        
+    <div class="tree-node ">
+        <span class="tree-icon">
+            🎞️
+        </span>
+        Null 1
+        
+    </div>
+    
+
+    
+
+    
+
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Generated by mobot2025 AEP Parser</p>
+        <p>github.com/boltframe/aftereffects-aep-parser</p>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            
+            document.getElementById(tabName).classList.add('active');
+            
+            
+            event.target.classList.add('active');
+        }
+        
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent || row.innerText;
+                
+                if (text.toUpperCase().indexOf(filter) > -1) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

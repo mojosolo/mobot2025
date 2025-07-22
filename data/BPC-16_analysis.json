@@ -1,0 +1,180 @@
+{
+  "metadata": {
+    "file_path": "data/BPC-16.aep",
+    "file_name": "BPC-16.aep",
+    "file_size": 0,
+    "parsed_at": "2025-07-21T17:40:30.06008-05:00",
+    "bit_depth": 1,
+    "expression_engine": "javascript-1.0",
+    "total_items": 1,
+    "compositions": [],
+    "text_layers": [],
+    "media_assets": [],
+    "effects": [],
+    "categories": [],
+    "tags": [],
+    "capabilities": {
+      "has_text_replacement": false,
+      "has_image_replacement": false,
+      "has_color_control": false,
+      "has_audio_replacement": false,
+      "has_data_driven": false,
+      "has_expressions": false,
+      "is_modular": false
+    },
+    "opportunities": []
+  },
+  "modular_system": {
+    "total_modules": 0,
+    "modular_components": [],
+    "relationships": [],
+    "mix_match_options": [],
+    "variant_potential": 1
+  },
+  "hidden_layers": [],
+  "text_intelligence": {
+    "total_text_layers": 0,
+    "dynamic_fields": [],
+    "pattern_groups": {},
+    "formatting_options": [
+      {
+        "name": "Bold Title",
+        "properties": {
+          "fontSize": "48px",
+          "fontWeight": "bold",
+          "textTransform": "uppercase"
+        },
+        "preview": "BOLD TITLE"
+      },
+      {
+        "name": "Elegant Script",
+        "properties": {
+          "fontFamily": "script",
+          "fontSize": "36px",
+          "fontStyle": "italic"
+        },
+        "preview": "Elegant Script"
+      },
+      {
+        "name": "Modern Minimal",
+        "properties": {
+          "fontSize": "32px",
+          "fontWeight": "300",
+          "letterSpacing": "0.1em"
+        },
+        "preview": "Modern Minimal"
+      }
+    ],
+    "localization_ready": false,
+    "data_binding_options": []
+  },
+  "media_mapping": {
+    "total_assets": 0,
+    "replaceable_assets": [],
+    "asset_groups": {},
+    "smart_suggestions": []
+  },
+  "effect_chains": [],
+  "api_schema": {
+    "version": "1.0.0",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/render",
+        "description": "Render video with custom parameters",
+        "parameters": [],
+        "response": {
+          "eta": "number",
+          "job_id": "string",
+          "status": "string"
+        }
+      }
+    ],
+    "data_models": {
+      "RenderRequest": {
+        "name": "RenderRequest",
+        "fields": {
+          "format": {
+            "type": "string",
+            "description": "Output format",
+            "default": "mp4",
+            "validation": "^(mp4|mov|webm)$"
+          },
+          "quality": {
+            "type": "string",
+            "description": "Render quality setting",
+            "default": "high",
+            "validation": "^(low|medium|high|ultra)$"
+          }
+        },
+        "required": [],
+        "examples": []
+      },
+      "RenderResponse": {
+        "name": "RenderResponse",
+        "fields": {
+          "error": {
+            "type": "string",
+            "description": "Error message (if failed)",
+            "default": null,
+            "validation": ""
+          },
+          "eta": {
+            "type": "number",
+            "description": "Estimated time to completion in seconds",
+            "default": null,
+            "validation": ""
+          },
+          "job_id": {
+            "type": "string",
+            "description": "Unique job identifier",
+            "default": null,
+            "validation": ""
+          },
+          "output_url": {
+            "type": "string",
+            "description": "URL of rendered video (when completed)",
+            "default": null,
+            "validation": ""
+          },
+          "progress": {
+            "type": "number",
+            "description": "Progress percentage (0-100)",
+            "default": null,
+            "validation": ""
+          },
+          "status": {
+            "type": "string",
+            "description": "Current job status",
+            "default": null,
+            "validation": "^(queued|processing|completed|failed)$"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "examples": null
+      }
+    },
+    "examples": [
+      {
+        "name": "Basic Render",
+        "description": "Simple video render with text replacements",
+        "request": {
+          "format": "mp4",
+          "quality": "high"
+        },
+        "response": {
+          "eta": 120,
+          "job_id": "job_123456",
+          "progress": 0,
+          "status": "processing"
+        }
+      }
+    ]
+  },
+  "complexity_score": 0,
+  "automation_score": 13.333333333333334,
+  "recommendations": []
+}
